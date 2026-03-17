@@ -1,0 +1,92 @@
+{
+  "version": 3,
+  "targets": {
+    ".NETFramework,Version=v4.8": {
+      "Logging.Core/3.2.0": {
+        "type": "package",
+        "dependencies": {
+          "log4net": "2.0.10"
+        },
+        "compile": {},
+        "runtime": {}
+      },
+      "log4net/2.0.10": {
+        "type": "package",
+        "dependencies": {},
+        "compile": {},
+        "runtime": {}
+      },
+      "Newtonsoft.Json/13.0.3": {
+        "type": "package",
+        "dependencies": {},
+        "compile": {},
+        "runtime": {}
+      },
+      "RestSharp/112.0.0": {
+        "type": "package",
+        "dependencies": {
+          "System.Text.Json": "8.0.0"
+        },
+        "compile": {},
+        "runtime": {}
+      },
+      "System.Text.Json/8.0.0": {
+        "type": "package",
+        "dependencies": {
+          "System.Memory": "4.5.5"
+        },
+        "compile": {},
+        "runtime": {}
+      },
+      "System.Memory/4.5.5": {
+        "type": "package",
+        "dependencies": {},
+        "compile": {},
+        "runtime": {}
+      },
+      "DataAccess/2.0.0": {
+        "type": "package",
+        "dependencies": {
+          "System.Text.Json": "8.0.0",
+          "log4net": "2.0.10"
+        },
+        "compile": {},
+        "runtime": {}
+      },
+      "MySharedLib/1.0.0": {
+        "type": "project",
+        "framework": ".NETFramework,Version=v4.8"
+      }
+    }
+  },
+  "libraries": {},
+  "project": {
+    "version": "1.0.0",
+    "frameworks": {
+      ".NETFramework,Version=v4.8": {
+        "targetAlias": "net48",
+        "dependencies": {
+          "Logging.Core": {
+            "target": "Package",
+            "version": "[3.2.0, )"
+          },
+          "Newtonsoft.Json": {
+            "target": "Package",
+            "version": "[13.0.3, )"
+          },
+          "RestSharp": {
+            "target": "Package",
+            "version": "[112.0.0, )"
+          },
+          "DataAccess": {
+            "target": "Package",
+            "version": "[2.0.0, )"
+          },
+          "MySharedLib": {
+            "target": "Project"
+          }
+        }
+      }
+    }
+  }
+}
