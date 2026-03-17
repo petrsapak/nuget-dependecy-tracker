@@ -6,7 +6,8 @@ var app = new CommandApp<MapCommand>();
 app.Configure(config =>
 {
     config.SetApplicationName("nuget-dependency-mapper");
-    config.SetApplicationVersion("1.1.0");
+    config.SetApplicationVersion(
+        typeof(MapCommand).Assembly.GetName().Version?.ToString(3) ?? "0.0.0");
 
     config.AddExample(["MyProject.csproj"]);
     config.AddExample(["MySolution.sln"]);

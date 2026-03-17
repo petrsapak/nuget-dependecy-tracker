@@ -4,40 +4,46 @@ A CLI tool that visualizes the NuGet dependency tree for .NET projects and solut
 
 Built with [Spectre.Console](https://spectreconsole.net/) for rich, color-coded terminal output.
 
+## Installation
+
+Download the latest release for your platform from the [Releases](../../releases) page and extract it to a directory on your `PATH`.
+
+| Platform | Asset |
+|----------|-------|
+| Windows (x64) | `nuget-dependency-mapper-win-x64.zip` |
+| Linux (x64) | `nuget-dependency-mapper-linux-x64.zip` |
+| macOS (x64) | `nuget-dependency-mapper-osx-x64.zip` |
+| macOS (Apple Silicon) | `nuget-dependency-mapper-osx-arm64.zip` |
+
+The executables are self-contained — no .NET SDK or runtime installation is required.
+
 ## Prerequisites
 
-- .NET 8.0 SDK or later
 - `dotnet restore` must have been run on the target project(s) (the tool reads `obj/project.assets.json`)
-
-## Build
-
-```bash
-dotnet build
-```
 
 ## Usage
 
 ```bash
 # Show the full dependency tree for a single project
-dotnet run --project src/NuGetDependencyMapper -- <path-to.csproj>
+nuget-dependency-mapper MyProject.csproj
 
 # Show dependency trees for all projects in a solution
-dotnet run --project src/NuGetDependencyMapper -- <path-to.sln>
+nuget-dependency-mapper MySolution.sln
 
 # Select a specific target framework (for multi-target projects)
-dotnet run --project src/NuGetDependencyMapper -- <path-to.csproj> -f net48
+nuget-dependency-mapper MyProject.csproj -f net48
 
 # Trace all paths to a specific package
-dotnet run --project src/NuGetDependencyMapper -- <path-to.csproj> -t log4net
+nuget-dependency-mapper MyProject.csproj -t log4net
 
 # Trace a package across an entire solution
-dotnet run --project src/NuGetDependencyMapper -- <path-to.sln> -t log4net
+nuget-dependency-mapper MySolution.sln -t log4net
 
 # Export the tree to a file (plain text, no colors)
-dotnet run --project src/NuGetDependencyMapper -- <path-to.sln> -o dependencies.txt
+nuget-dependency-mapper MySolution.sln -o dependencies.txt
 
 # Combine options
-dotnet run --project src/NuGetDependencyMapper -- <path-to.sln> -f net48 -t Microsoft.Data.SqlClient -o trace.txt
+nuget-dependency-mapper MySolution.sln -f net48 -t Microsoft.Data.SqlClient -o trace.txt
 ```
 
 ### Options
@@ -56,6 +62,15 @@ Running with `--help` displays auto-generated, color-coded usage information:
 ```
 USAGE:
     nuget-dependency-mapper <PATH> [OPTIONS]
+
+EXAMPLES:
+    nuget-dependency-mapper MyProject.csproj
+    nuget-dependency-mapper MySolution.sln
+    nuget-dependency-mapper MyProject.csproj -f net48
+    nuget-dependency-mapper MyProject.csproj -t log4net
+    nuget-dependency-mapper MySolution.sln -t Newtonsoft.Json
+    nuget-dependency-mapper MySolution.sln -o dependencies.txt
+    nuget-dependency-mapper MySolution.sln -f net48 -t Microsoft.Data.SqlClient -o trace.txt
 
 ARGUMENTS:
     <PATH>    Path to a .csproj or .sln file
@@ -153,14 +168,23 @@ Skipping MyLib: project.assets.json not found (run dotnet restore)
 When using `--output`, the tree is written as plain text with no ANSI escape codes — suitable for sharing, diffing, or piping to other tools:
 
 ```bash
-dotnet run --project src/NuGetDependencyMapper -- MySolution.sln -o deps.txt
+nuget-dependency-mapper MySolution.sln -o deps.txt
 # => Dependency tree exported to: /full/path/to/deps.txt
 ```
 
-## Running Tests
+## Building from Source
+
+Requires .NET 8.0 SDK or later.
 
 ```bash
+dotnet build
 dotnet test
+```
+
+To publish a self-contained executable:
+
+```bash
+dotnet publish src/NuGetDependencyMapper -c Release -r win-x64 --self-contained
 ```
 
 ## Target Framework Support
