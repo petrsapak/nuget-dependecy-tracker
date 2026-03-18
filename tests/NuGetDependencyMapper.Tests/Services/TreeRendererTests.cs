@@ -101,7 +101,7 @@ public class TreeRendererTests
     }
 
     [Fact]
-    public void RenderFullTree_FrameworkReference_ShowsLabel()
+    public void RenderFullTree_UnresolvedDependency_ShowsNotResolvedLabel()
     {
         var packages = new Dictionary<string, PackageInfo>(StringComparer.OrdinalIgnoreCase)
         {
@@ -113,7 +113,7 @@ public class TreeRendererTests
         _renderer.RenderFullTree(graph, console);
 
         Assert.Contains("MissingPkg", console.Output);
-        Assert.Contains("framework reference", console.Output);
+        Assert.Contains("not resolved", console.Output);
     }
 
     [Fact]

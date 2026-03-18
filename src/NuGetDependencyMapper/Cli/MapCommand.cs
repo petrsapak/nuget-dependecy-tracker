@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
 using NuGetDependencyMapper.Infrastructure;
 using NuGetDependencyMapper.Services;
@@ -9,6 +10,15 @@ namespace NuGetDependencyMapper.Cli;
 
 public sealed class MapCommand : Command<MapCommand.Settings>
 {
+    private readonly IServiceProvider? _serviceProvider;
+
+    public MapCommand() { }
+
+    internal MapCommand(IServiceProvider serviceProvider)
+    {
+        _serviceProvider = serviceProvider;
+    }
+
     public sealed class Settings : CommandSettings
     {
         [CommandArgument(0, "<PATH>")]
@@ -43,7 +53,7 @@ public sealed class MapCommand : Command<MapCommand.Settings>
 
     public override int Execute(CommandContext context, Settings settings)
     {
-        var services = BuildServiceProvider();
+        var services = _serviceProvider ?? BuildServiceProvider();
         var fileSystem = services.GetRequiredService<IFileSystem>();
 
         var inputPath = Path.GetFullPath(settings.InputPath);
@@ -85,6 +95,12 @@ public sealed class MapCommand : Command<MapCommand.Settings>
 
         try
         {
+            if (settings.IsSolution)
+            {
+                outputConsole.MarkupLine($"[blue]Solution:[/] {Path.GetFileName(inputPath).EscapeMarkup()} — [bold]{projectPaths.Count}[/] project(s) found");
+                outputConsole.WriteLine();
+            }
+
             var graphBuilder = services.GetRequiredService<IDependencyGraphBuilder>();
             var renderer = services.GetRequiredService<ITreeRenderer>();
             var tracer = services.GetRequiredService<IDependencyTracer>();
@@ -102,7 +118,7 @@ public sealed class MapCommand : Command<MapCommand.Settings>
                 {
                     if (settings.IsSolution)
                     {
-                        AnsiConsole.MarkupLine($"[yellow]Skipping[/] {projectName.EscapeMarkup()}: project.assets.json not found [dim](run dotnet restore)[/]");
+                        outputConsole.MarkupLine($"[yellow]Skipping[/] {projectName.EscapeMarkup()}: project.assets.json not found [dim](run dotnet restore)[/]");
                         skippedCount++;
                         continue;
                     }
@@ -122,6 +138,14 @@ public sealed class MapCommand : Command<MapCommand.Settings>
 
                     if (graph.DirectDependencies.Count == 0)
                     {
+                        if (settings.IsSolution)
+                        {
+                            outputConsole.MarkupLine($"[yellow]Skipping[/] {projectName.EscapeMarkup()}: no package references found");
+                        }
+                        else
+                        {
+                            outputConsole.MarkupLine($"[dim]{projectName.EscapeMarkup()} has no package references.[/]");
+                        }
                         skippedCount++;
                         continue;
                     }
@@ -156,10 +180,10 @@ public sealed class MapCommand : Command<MapCommand.Settings>
 
                         if (graph.AvailableFrameworks.Count > 1 && settings.Framework == null && !settings.IsSolution)
                         {
-                            AnsiConsole.MarkupLine(
+                            outputConsole.MarkupLine(
                                 $"[dim]Multiple frameworks found: {string.Join(", ", graph.AvailableFrameworks).EscapeMarkup()}. Showing: [bold]{graph.TargetFramework.EscapeMarkup()}[/][/]");
-                            AnsiConsole.MarkupLine("[dim]Use --framework <tfm> to select a different one[/]");
-                            AnsiConsole.WriteLine();
+                            outputConsole.MarkupLine("[dim]Use --framework <tfm> to select a different one[/]");
+                            outputConsole.WriteLine();
                         }
 
                         renderer.RenderFullTree(graph, outputConsole);
@@ -167,10 +191,18 @@ public sealed class MapCommand : Command<MapCommand.Settings>
 
                     processedCount++;
                 }
-                catch (ArgumentException ex) when (settings.IsSolution)
+                catch (Exception ex) when (ex is ArgumentException or InvalidOperationException or JsonException)
                 {
-                    AnsiConsole.MarkupLine($"[yellow]Skipping[/] {projectName.EscapeMarkup()}: {ex.Message.EscapeMarkup()}");
-                    skippedCount++;
+                    if (settings.IsSolution)
+                    {
+                        outputConsole.MarkupLine($"[yellow]Skipping[/] {projectName.EscapeMarkup()}: {ex.Message.EscapeMarkup()}");
+                        skippedCount++;
+                    }
+                    else
+                    {
+                        AnsiConsole.MarkupLine($"[red]Error:[/] {ex.Message.EscapeMarkup()}");
+                        return 1;
+                    }
                 }
             }
 
@@ -195,16 +227,13 @@ public sealed class MapCommand : Command<MapCommand.Settings>
     }
 
     private static List<string>? ResolveProjectPaths(
-        string inputPath, Settings settings, IFileSystem fileSystem, ServiceProvider serviceProvider)
+        string inputPath, Settings settings, IFileSystem fileSystem, IServiceProvider serviceProvider)
     {
         if (settings.IsSolution)
         {
             var solutionContent = fileSystem.ReadAllText(inputPath);
             var solutionParser = serviceProvider.GetRequiredService<ISolutionParser>();
             var projectPaths = solutionParser.GetProjectPaths(inputPath, solutionContent);
-
-            AnsiConsole.MarkupLine($"[blue]Solution:[/] {Path.GetFileName(inputPath).EscapeMarkup()} — [bold]{projectPaths.Count}[/] project(s) found");
-            AnsiConsole.WriteLine();
 
             return projectPaths.ToList();
         }

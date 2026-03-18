@@ -10,13 +10,15 @@ public class DependencyGraphBuilderTests
     private readonly ITargetFrameworkResolver _resolver = Substitute.For<ITargetFrameworkResolver>();
     private readonly DependencyGraphBuilder _builder;
 
+    // Use realistic long-form framework names as produced by the AssetsFileParser
+    // (project.frameworks keys in real project.assets.json files)
     private static readonly AssetsFileContent SampleContent = new()
     {
-        AvailableFrameworks = ["net8.0", "net48"],
+        AvailableFrameworks = ["net8.0", ".NETFramework,Version=v4.8"],
         DirectDependenciesByFramework = new Dictionary<string, IReadOnlyList<string>>
         {
             ["net8.0"] = new List<string> { "PackageB", "PackageA" },
-            ["net48"] = new List<string> { "PackageA" }
+            [".NETFramework,Version=v4.8"] = new List<string> { "PackageA" }
         },
         PackagesByTarget = new Dictionary<string, IReadOnlyDictionary<string, PackageInfo>>
         {
@@ -61,14 +63,14 @@ public class DependencyGraphBuilderTests
     }
 
     [Fact]
-    public void Build_WithRequestedFramework_SelectsCorrectOne()
+    public void Build_WithShortAlias_ResolvesToLongFormFramework()
     {
-        _resolver.ResolveTargetsKey("net48", Arg.Any<IReadOnlyList<string>>())
+        _resolver.ResolveTargetsKey(".NETFramework,Version=v4.8", Arg.Any<IReadOnlyList<string>>())
             .Returns(".NETFramework,Version=v4.8");
 
         var graph = _builder.Build("TestProject", "{}", "net48");
 
-        Assert.Equal("net48", graph.TargetFramework);
+        Assert.Equal(".NETFramework,Version=v4.8", graph.TargetFramework);
         Assert.Single(graph.DirectDependencies);
     }
 
@@ -114,6 +116,45 @@ public class DependencyGraphBuilderTests
 
         Assert.Equal(2, graph.AvailableFrameworks.Count);
         Assert.Contains("net8.0", graph.AvailableFrameworks);
-        Assert.Contains("net48", graph.AvailableFrameworks);
+        Assert.Contains(".NETFramework,Version=v4.8", graph.AvailableFrameworks);
+    }
+
+    [Fact]
+    public void Build_WithLongFormFramework_SelectsExactMatch()
+    {
+        _resolver.ResolveTargetsKey(".NETFramework,Version=v4.8", Arg.Any<IReadOnlyList<string>>())
+            .Returns(".NETFramework,Version=v4.8");
+
+        var graph = _builder.Build("TestProject", "{}", ".NETFramework,Version=v4.8");
+
+        Assert.Equal(".NETFramework,Version=v4.8", graph.TargetFramework);
+    }
+
+    [Theory]
+    [InlineData("netstandard2.0")]
+    [InlineData("netcoreapp3.1")]
+    [InlineData("net48")]
+    public void Build_WithUnknownShortAlias_ThrowsWhenNoMatchingFramework(string alias)
+    {
+        var singleFrameworkContent = new AssetsFileContent
+        {
+            AvailableFrameworks = ["net8.0"],
+            DirectDependenciesByFramework = new Dictionary<string, IReadOnlyList<string>>
+            {
+                ["net8.0"] = new List<string> { "PackageA" }
+            },
+            PackagesByTarget = new Dictionary<string, IReadOnlyDictionary<string, PackageInfo>>
+            {
+                ["net8.0"] = new Dictionary<string, PackageInfo>(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["PackageA"] = new("PackageA", "1.0.0", new Dictionary<string, string>())
+                }
+            },
+            AvailableTargets = ["net8.0"]
+        };
+        _parser.Parse(Arg.Any<string>()).Returns(singleFrameworkContent);
+
+        Assert.Throws<ArgumentException>(() =>
+            _builder.Build("TestProject", "{}", alias));
     }
 }

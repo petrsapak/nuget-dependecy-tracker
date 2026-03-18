@@ -48,11 +48,32 @@ public class DependencyGraphBuilder : IDependencyGraphBuilder
         if (requestedFramework == null)
             return content.AvailableFrameworks[0];
 
+        // 1. Exact match
         var match = content.AvailableFrameworks.FirstOrDefault(
             t => t.Equals(requestedFramework, StringComparison.OrdinalIgnoreCase));
 
+        // 2. Substring match
         match ??= content.AvailableFrameworks.FirstOrDefault(
             t => t.Contains(requestedFramework, StringComparison.OrdinalIgnoreCase));
+
+        // 3. Alias normalization: convert short alias (e.g. "net48") to long form
+        //    and match against available frameworks
+        if (match == null)
+        {
+            var longForm = TargetFrameworkResolver.ConvertToLongFormMoniker(requestedFramework);
+            if (longForm != null)
+            {
+                match = content.AvailableFrameworks.FirstOrDefault(
+                    t => t.Equals(longForm, StringComparison.OrdinalIgnoreCase));
+
+                match ??= content.AvailableFrameworks.FirstOrDefault(
+                    t => t.Contains(longForm, StringComparison.OrdinalIgnoreCase));
+            }
+        }
+
+        // 4. Reverse: the request might be long-form, try matching against shorter framework names
+        match ??= content.AvailableFrameworks.FirstOrDefault(
+            t => requestedFramework.Contains(t, StringComparison.OrdinalIgnoreCase));
 
         if (match == null)
         {

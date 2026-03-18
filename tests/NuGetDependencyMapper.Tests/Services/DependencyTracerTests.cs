@@ -149,4 +149,29 @@ public class DependencyTracerTests
         Assert.Equal("log4net", result.TargetPackage);
         Assert.Equal("2.0.10", result.TargetVersion);
     }
+
+    [Fact]
+    public void Trace_MultiplePaths_AreOrderedAlphabetically()
+    {
+        // A has deps on C and B (inserted in reverse order), both lead to Target
+        var packages = new Dictionary<string, PackageInfo>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["PackageA"] = new("PackageA", "1.0.0", new Dictionary<string, string>
+            {
+                ["PackageC"] = "3.0.0",
+                ["PackageB"] = "2.0.0"
+            }),
+            ["PackageB"] = new("PackageB", "2.0.0", new Dictionary<string, string> { ["Target"] = "1.0.0" }),
+            ["PackageC"] = new("PackageC", "3.0.0", new Dictionary<string, string> { ["Target"] = "1.0.0" }),
+            ["Target"] = new("Target", "1.0.0", new Dictionary<string, string>())
+        };
+        var graph = CreateGraph(packages, ["PackageA"]);
+
+        var result = _tracer.Trace(graph, "Target");
+
+        Assert.Equal(2, result.Paths.Count);
+        // PackageB path should come before PackageC path due to alphabetical ordering
+        Assert.Equal("PackageB", result.Paths[0].PackageNames[1]);
+        Assert.Equal("PackageC", result.Paths[1].PackageNames[1]);
+    }
 }

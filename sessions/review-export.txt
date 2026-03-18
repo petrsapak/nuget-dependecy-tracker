@@ -1,0 +1,38 @@
+﻿Solution: nuget-dependency-mapper.sln — 2 project(s) found
+
+NuGetDependencyMapper (net8.0)
+├── Microsoft.Extensions.DependencyInjection 8.0.1
+│   └── Microsoft.Extensions.DependencyInjection.Abstractions 8.0.2
+├── MinVer 6.1.0
+└── Spectre.Console.Cli 0.49.1
+    └── Spectre.Console 0.49.1
+
+────────────────────────────────────────────────────────────────────────────────
+
+NuGetDependencyMapper.Tests (net8.0)
+├── Microsoft.NET.Test.Sdk 17.14.1
+│   ├── Microsoft.CodeCoverage 17.14.1
+│   └── Microsoft.TestPlatform.TestHost 17.14.1
+│       ├── Microsoft.TestPlatform.ObjectModel 17.14.1
+│       │   └── System.Reflection.Metadata 8.0.0
+│       │       └── System.Collections.Immutable 8.0.0
+│       └── Newtonsoft.Json 13.0.3
+├── NSubstitute 5.3.0
+│   └── Castle.Core 5.1.1
+│       └── System.Diagnostics.EventLog 6.0.0
+├── Spectre.Console.Testing 0.49.1
+│   ├── Spectre.Console 0.49.1
+│   └── Spectre.Console.Cli 0.49.1
+│       └── Spectre.Console 0.49.1
+├── xunit 2.9.3
+│   ├── xunit.analyzers 1.18.0
+│   ├── xunit.assert 2.9.3
+│   └── xunit.core 2.9.3
+│       ├── xunit.extensibility.core 2.9.3
+│       │   └── xunit.abstractions 2.0.3
+│       └── xunit.extensibility.execution 2.9.3
+│           └── xunit.extensibility.core 2.9.3
+│               └── xunit.abstractions 2.0.3
+└── xunit.runner.visualstudio 2.8.2
+
+────────────────────── 2 project(s) processed, 0 skipped ───────────────────────

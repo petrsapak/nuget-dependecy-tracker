@@ -69,7 +69,7 @@ public class DependencyTracer : IDependencyTracer
             return;
         }
 
-        foreach (var dependency in packageInfo.Dependencies.Keys)
+        foreach (var dependency in packageInfo.Dependencies.Keys.OrderBy(k => k, StringComparer.OrdinalIgnoreCase))
         {
             FindPathsRecursive(dependency, targetPackage, packages, currentPath, results, visited);
         }

@@ -12,6 +12,7 @@ graph LR
             Infra["Infrastructure/<br/>External system abstractions"]
         end
         subgraph Tests["tests/NuGetDependencyMapper.Tests"]
+            TCli["Cli/"]
             TServices["Services/"]
             TData["TestData/"]
         end

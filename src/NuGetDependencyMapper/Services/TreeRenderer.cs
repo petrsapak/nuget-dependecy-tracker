@@ -69,7 +69,7 @@ public class TreeRenderer : ITreeRenderer
         if (packages.TryGetValue(packageName, out var package))
             return $"[green]{package.Name.EscapeMarkup()}[/] [dim]{package.Version.EscapeMarkup()}[/]";
 
-        return $"{packageName.EscapeMarkup()} [dim italic](framework reference)[/]";
+        return $"{packageName.EscapeMarkup()} [dim italic](not resolved)[/]";
     }
 
     private static void AddPackageNode(
@@ -80,7 +80,7 @@ public class TreeRenderer : ITreeRenderer
     {
         if (!packages.TryGetValue(packageName, out var package))
         {
-            parent.AddNode($"{packageName.EscapeMarkup()} [dim italic](framework reference)[/]");
+            parent.AddNode($"{packageName.EscapeMarkup()} [dim italic](not resolved)[/]");
             return;
         }
 
