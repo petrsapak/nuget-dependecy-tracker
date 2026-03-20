@@ -32,6 +32,9 @@ bld/
 [Ll]og/
 [Ll]ogs/
 
+## Claude Code
+.claude/
+
 ## Test results
 [Tt]est[Rr]esult*/
 [Bb]uild[Ll]og.*
